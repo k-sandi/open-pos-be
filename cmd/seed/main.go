@@ -122,5 +122,16 @@ func main() {
 		}
 	}
 
+	// 6. Seed Taxes
+	log.Println("Seeding taxes...")
+	_, err = dbPool.Exec(ctx, `
+		INSERT INTO taxes (name, rate, is_active)
+		VALUES ('PB1 10%', 10.00, true)
+		ON CONFLICT DO NOTHING
+	`)
+	if err != nil {
+		log.Fatalf("Failed to seed taxes: %v", err)
+	}
+
 	log.Println("Database seeded successfully! Default Admin - Employee ID: admin01, PIN: 123456")
 }
