@@ -68,5 +68,29 @@ func main() {
 		log.Fatalf("Failed to seed admin user: %v", err)
 	}
 
+	// 3. Seed Categories
+	log.Println("Seeding categories...")
+	var categoryID string
+	err = dbPool.QueryRow(ctx, `
+		INSERT INTO categories (name, description, is_active)
+		VALUES ($1, $2, true)
+		ON CONFLICT (name) DO UPDATE SET is_active = true
+		RETURNING id
+	`, "Beverages", "All drinks").Scan(&categoryID)
+	if err != nil {
+		log.Fatalf("Failed to seed category: %v", err)
+	}
+
+	// 4. Seed Products
+	log.Println("Seeding products...")
+	_, err = dbPool.Exec(ctx, `
+		INSERT INTO products (category_id, sku, name, description, price, is_active)
+		VALUES ($1, $2, $3, $4, $5, true)
+		ON CONFLICT (sku) DO NOTHING
+	`, categoryID, "BEV-001", "Espresso", "Strong coffee", 20000)
+	if err != nil {
+		log.Fatalf("Failed to seed product: %v", err)
+	}
+
 	log.Println("Database seeded successfully! Default Admin - Employee ID: admin01, PIN: 123456")
 }
