@@ -3,12 +3,19 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var SecretKey = []byte("super-secret-key-replace-in-prod")
+func getSecretKey() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return []byte("super-secret-key-replace-in-prod")
+	}
+	return []byte(secret)
+}
 
 // Claims contains extracted authenticated user information.
 type Claims struct {
@@ -33,7 +40,7 @@ func GenerateToken(userID, role string, duration time.Duration) (string, error) 
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(SecretKey)
+	return token.SignedString(getSecretKey())
 }
 
 // ValidateToken parses and validates a signed JWT token string, returning Claims if valid.
@@ -42,7 +49,7 @@ func ValidateToken(tokenString string) (*Claims, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-		return SecretKey, nil
+		return getSecretKey(), nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("invalid token: %w", err)
