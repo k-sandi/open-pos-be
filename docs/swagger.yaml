@@ -71,6 +71,33 @@ definitions:
       is_active:
         type: boolean
     type: object
+  variants.ModifierDTO:
+    properties:
+      additional_price:
+        type: integer
+      modifier_group_id:
+        type: string
+      name:
+        type: string
+    type: object
+  variants.ModifierGroupDTO:
+    properties:
+      is_active:
+        type: boolean
+      max_choices:
+        type: integer
+      min_choices:
+        type: integer
+      name:
+        type: string
+      product_id:
+        type: string
+    type: object
+  variants.StatusRequest:
+    properties:
+      is_active:
+        type: boolean
+    type: object
 info:
   contact: {}
   description: Backend API for the Open POS application.
@@ -243,6 +270,178 @@ paths:
       summary: Update Category Status
       tags:
       - categories
+  /modifier-groups:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier Group Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/variants.ModifierGroupDTO'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create Modifier Group
+      tags:
+      - modifier-groups
+  /modifier-groups/{id}:
+    delete:
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Modifier Group
+      tags:
+      - modifier-groups
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/variants.ModifierGroupDTO'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update Modifier Group
+      tags:
+      - modifier-groups
+  /modifier-groups/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/variants.StatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update Modifier Group Status
+      tags:
+      - modifier-groups
+  /modifiers:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/variants.ModifierDTO'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create Modifier
+      tags:
+      - modifiers
+  /modifiers/{id}:
+    delete:
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Modifier
+      tags:
+      - modifiers
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Modifier Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/variants.ModifierDTO'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update Modifier
+      tags:
+      - modifiers
+  /modifiers/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/variants.StatusRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update Modifier Status
+      tags:
+      - modifiers
+  /modifiers/group/{groupID}:
+    get:
+      parameters:
+      - description: Modifier Group ID
+        in: path
+        name: groupID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List Modifiers by Group
+      tags:
+      - modifiers
   /products:
     get:
       produces:
@@ -349,6 +548,22 @@ paths:
       summary: Update Product Status
       tags:
       - products
+  /products/{product_id}/modifier-groups:
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List Modifier Groups by Product
+      tags:
+      - modifier-groups
   /users:
     get:
       produces:

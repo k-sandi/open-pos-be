@@ -92,5 +92,35 @@ func main() {
 		log.Fatalf("Failed to seed product: %v", err)
 	}
 
+	// 5. Seed Modifiers
+	log.Println("Seeding variants and modifiers...")
+	var groupID string
+	err = dbPool.QueryRow(ctx, `
+		INSERT INTO modifier_groups (product_id, name, min_choices, max_choices, is_active)
+		VALUES (
+			(SELECT id FROM products WHERE sku = 'BEV-001'), 
+			$1, 1, 1, true
+		)
+		ON CONFLICT DO NOTHING
+		RETURNING id
+	`, "Ice Level").Scan(&groupID)
+
+	if err != nil && err.Error() != "no rows in result set" {
+		log.Fatalf("Failed to seed modifier group: %v", err)
+	}
+
+	if groupID != "" {
+		_, err = dbPool.Exec(ctx, `
+			INSERT INTO modifiers (modifier_group_id, name, additional_price, is_active)
+			VALUES 
+				($1, 'Normal Ice', 0, true),
+				($1, 'Less Ice', 0, true),
+				($1, 'No Ice', 0, true)
+		`, groupID)
+		if err != nil {
+			log.Fatalf("Failed to seed modifiers: %v", err)
+		}
+	}
+
 	log.Println("Database seeded successfully! Default Admin - Employee ID: admin01, PIN: 123456")
 }
