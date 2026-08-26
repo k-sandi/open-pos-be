@@ -10,11 +10,21 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+	_ "open-pos-be/docs"
 
 	customMiddleware "open-pos-be/internal/middleware"
 	"open-pos-be/internal/users"
 )
 
+// @title Open POS API
+// @version 1.0
+// @description Backend API for the Open POS application.
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name x-api-key
 func main() {
 	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
@@ -59,6 +69,9 @@ func main() {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("OK"))
 		})
+		r.Get("/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
+		))
 	})
 
 	// Protected Routes (requires x-api-key or Bearer token)

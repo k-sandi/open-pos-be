@@ -1,0 +1,53 @@
+basePath: /api/v1
+definitions:
+  users.StatusRequest:
+    properties:
+      is_active:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Backend API for the Open POS application.
+  title: Open POS API
+  version: "1.0"
+paths:
+  /users/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the active status of a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.StatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update User Status
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: x-api-key
+    type: apiKey
+swagger: "2.0"

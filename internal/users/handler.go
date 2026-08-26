@@ -20,6 +20,17 @@ func Routes() chi.Router {
 }
 
 // UpdateStatusHandler handles PATCH /api/v1/users/:id/status
+// @Summary Update User Status
+// @Description Updates the active status of a user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param request body StatusRequest true "Status Update Request"
+// @Success 200 {string} string "OK"
+// @Failure 400 {string} string "Bad Request"
+// @Security ApiKeyAuth
+// @Router /users/{id}/status [patch]
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	var req StatusRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
