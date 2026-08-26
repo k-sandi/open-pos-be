@@ -91,9 +91,9 @@ func (h *Handler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	for _, u := range users {
 		res = append(res, mapUserToResponse(u))
 	}
-    if res == nil {
-        res = []UserResponse{}
-    }
+	if res == nil {
+		res = []UserResponse{}
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
@@ -112,7 +112,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	
+
 	dto := CreateUserDTO{
 		EmployeeID: req.EmployeeID,
 		PIN:        req.PIN,
@@ -175,7 +175,7 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Router /users/{id}/status [patch]
 func (h *Handler) UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
-    id := chi.URLParam(r, "id")
+	id := chi.URLParam(r, "id")
 	var req StatusRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -183,9 +183,9 @@ func (h *Handler) UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.svc.UpdateStatus(r.Context(), id, req.IsActive); err != nil {
-        http.Error(w, "update failed", http.StatusInternalServerError)
+		http.Error(w, "update failed", http.StatusInternalServerError)
 		return
-    }
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

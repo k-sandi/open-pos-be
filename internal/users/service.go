@@ -8,21 +8,21 @@ import (
 )
 
 type CreateUserDTO struct {
-	EmployeeID string 
-	PIN        string 
-	Name       string 
-	Email      string 
-	Phone      string 
-	RoleID     string 
+	EmployeeID string
+	PIN        string
+	Name       string
+	Email      string
+	Phone      string
+	RoleID     string
 }
 
 type UpdateUserDTO struct {
-	EmployeeID string 
-	PIN        string 
-	Name       string 
-	Email      string 
-	Phone      string 
-	RoleID     string 
+	EmployeeID string
+	PIN        string
+	Name       string
+	Email      string
+	Phone      string
+	RoleID     string
 }
 
 type Service interface {

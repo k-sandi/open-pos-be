@@ -63,7 +63,7 @@ func main() {
 		VALUES ($1, $2, $3, $4, $5, $6, true)
 		ON CONFLICT (employee_id) DO NOTHING
 	`, employeeID, string(hashedPIN), "Super Admin", "admin@openpos.local", "+1234567890", adminRoleID)
-	
+
 	if err != nil {
 		log.Fatalf("Failed to seed admin user: %v", err)
 	}

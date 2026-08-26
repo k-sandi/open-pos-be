@@ -6,16 +6,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	httpSwagger "github.com/swaggo/http-swagger/v2"
 	_ "open-pos-be/docs"
 
-	"open-pos-be/internal/auth"
-	customMiddleware "open-pos-be/internal/middleware"
-	"open-pos-be/internal/users"
+	"open-pos-be/internal/router"
 )
 
 // @title Open POS API
@@ -55,42 +50,8 @@ func main() {
 	}
 	log.Println("Connected to PostgreSQL database successfully!")
 
-	// Initialize Layers
-	userRepo := users.NewRepository(dbPool)
-	userService := users.NewService(userRepo)
-	userHandler := users.NewHandler(userService)
-
-	authService := auth.NewService(userRepo)
-	authHandler := auth.NewHandler(authService)
-
-	r := chi.NewRouter()
-
-	// Global Middlewares
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-
-	// Public Routes
-	r.Group(func(r chi.Router) {
-		r.Get("/health", func(w http.ResponseWriter, req *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
-		})
-		r.Get("/swagger/*", httpSwagger.Handler(
-			httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
-		))
-		
-		r.Mount("/api/v1/auth", authHandler.Routes())
-	})
-
-	// Protected Routes (requires x-api-key or Bearer token)
-	r.Group(func(r chi.Router) {
-		r.Use(customMiddleware.Auth)
-
-		// Mount Users API Routes
-		r.Mount("/api/v1/users", userHandler.Routes())
-	})
+	// Setup router with all routes and middlewares
+	r := router.Setup(dbPool)
 
 	log.Printf("Starting server on port %s...", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {

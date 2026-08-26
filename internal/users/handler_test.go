@@ -12,13 +12,18 @@ import (
 
 type mockService struct{}
 
-func (m *mockService) GetProfile(ctx context.Context, userID string) (*users.User, error) { return nil, nil }
+func (m *mockService) GetProfile(ctx context.Context, userID string) (*users.User, error) {
+	return nil, nil
+}
 func (m *mockService) ListUsers(ctx context.Context) ([]*users.User, error) { return nil, nil }
-func (m *mockService) CreateUser(ctx context.Context, dto users.CreateUserDTO) (*users.User, error) { return nil, nil }
-func (m *mockService) UpdateUser(ctx context.Context, id string, dto users.UpdateUserDTO) error { return nil }
+func (m *mockService) CreateUser(ctx context.Context, dto users.CreateUserDTO) (*users.User, error) {
+	return nil, nil
+}
+func (m *mockService) UpdateUser(ctx context.Context, id string, dto users.UpdateUserDTO) error {
+	return nil
+}
 func (m *mockService) UpdateStatus(ctx context.Context, id string, isActive bool) error { return nil }
-func (m *mockService) DeleteUser(ctx context.Context, id string) error { return nil }
-
+func (m *mockService) DeleteUser(ctx context.Context, id string) error                  { return nil }
 
 func TestUpdateStatusHandler(t *testing.T) {
 	h := users.NewHandler(&mockService{})
