@@ -5,9 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"golang.org/x/crypto/bcrypt"
-	
 	customMiddleware "open-pos-be/internal/middleware"
 )
 
@@ -23,15 +20,25 @@ type UserResponse struct {
 	Email      string `json:"email"`
 	Phone      string `json:"phone"`
 	RoleID     string `json:"role_id"`
+	RoleName   string `json:"role_name"`
 	IsActive   bool   `json:"is_active"`
 }
 
-type Handler struct {
-	db *pgxpool.Pool
+type CreateUserRequest struct {
+	EmployeeID string `json:"employee_id"`
+	PIN        string `json:"pin"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	Phone      string `json:"phone"`
+	RoleID     string `json:"role_id"`
 }
 
-func NewHandler(db *pgxpool.Pool) *Handler {
-	return &Handler{db: db}
+type Handler struct {
+	svc Service
+}
+
+func NewHandler(svc Service) *Handler {
+	return &Handler{svc: svc}
 }
 
 // Routes returns a Chi router mounted with user routes.
@@ -46,53 +53,26 @@ func (h *Handler) Routes() chi.Router {
 	return r
 }
 
-// UpdateStatusHandler handles PATCH /api/v1/users/:id/status
-// @Summary Update User Status
-// @Description Updates the active status of a user
-// @Tags users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param request body StatusRequest true "Status Update Request"
-// @Success 200 {string} string "OK"
-// @Failure 400 {string} string "Bad Request"
-// @Security ApiKeyAuth
-// @Router /users/{id}/status [patch]
-func (h *Handler) UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
-	var req StatusRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	// TODO: DB update logic goes here. Mocking success for now.
-	w.WriteHeader(http.StatusOK)
-}
-
 // @Summary Get Current User Profile
 // @Tags users
 // @Produce json
 // @Security ApiKeyAuth
 // @Router /users/me [get]
 func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
-    // Extract claims from context
 	userID, ok := customMiddleware.GetUserID(r.Context())
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	var user UserResponse
-	err := h.db.QueryRow(r.Context(), `
-		SELECT id, employee_id, name, email, phone, role_id, is_active
-		FROM users WHERE id = $1 AND deleted_at IS NULL
-	`, userID).Scan(&user.ID, &user.EmployeeID, &user.Name, &user.Email, &user.Phone, &user.RoleID, &user.IsActive)
-	
+	user, err := h.svc.GetProfile(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(mapUserToResponse(user))
 }
 
 // @Summary List Users
@@ -101,36 +81,22 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Router /users [get]
 func (h *Handler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.db.Query(r.Context(), `
-		SELECT id, employee_id, name, email, phone, role_id, is_active
-		FROM users WHERE deleted_at IS NULL
-	`)
+	users, err := h.svc.ListUsers(r.Context())
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
 
-	users := []UserResponse{}
-	for rows.Next() {
-		var u UserResponse
-		if err := rows.Scan(&u.ID, &u.EmployeeID, &u.Name, &u.Email, &u.Phone, &u.RoleID, &u.IsActive); err != nil {
-			continue
-		}
-		users = append(users, u)
+	var res []UserResponse
+	for _, u := range users {
+		res = append(res, mapUserToResponse(u))
 	}
+    if res == nil {
+        res = []UserResponse{}
+    }
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
-}
-
-type CreateUserRequest struct {
-	EmployeeID string `json:"employee_id"`
-	PIN        string `json:"pin"`
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	Phone      string `json:"phone"`
-	RoleID     string `json:"role_id"`
+	json.NewEncoder(w).Encode(res)
 }
 
 // @Summary Create User
@@ -147,17 +113,21 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	pinHash, _ := bcrypt.GenerateFromPassword([]byte(req.PIN), bcrypt.DefaultCost)
+	dto := CreateUserDTO{
+		EmployeeID: req.EmployeeID,
+		PIN:        req.PIN,
+		Name:       req.Name,
+		Email:      req.Email,
+		Phone:      req.Phone,
+		RoleID:     req.RoleID,
+	}
 
-	_, err := h.db.Exec(r.Context(), `
-		INSERT INTO users (employee_id, pin_hash, name, email, phone, role_id)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`, req.EmployeeID, string(pinHash), req.Name, req.Email, req.Phone, req.RoleID)
-	
+	_, err := h.svc.CreateUser(r.Context(), dto)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -177,18 +147,46 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    pinHash, _ := bcrypt.GenerateFromPassword([]byte(req.PIN), bcrypt.DefaultCost)
-    
-	_, err := h.db.Exec(r.Context(), `
-		UPDATE users 
-		SET employee_id=$1, pin_hash=$2, name=$3, email=$4, phone=$5, role_id=$6, updated_at=NOW()
-		WHERE id=$7 AND deleted_at IS NULL
-	`, req.EmployeeID, string(pinHash), req.Name, req.Email, req.Phone, req.RoleID, id)
-	
-	if err != nil {
+	dto := UpdateUserDTO{
+		EmployeeID: req.EmployeeID,
+		PIN:        req.PIN,
+		Name:       req.Name,
+		Email:      req.Email,
+		Phone:      req.Phone,
+		RoleID:     req.RoleID,
+	}
+
+	if err := h.svc.UpdateUser(r.Context(), id, dto); err != nil {
 		http.Error(w, "update failed", http.StatusInternalServerError)
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// @Summary Update User Status
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param request body StatusRequest true "Status Update Request"
+// @Success 200 {string} string "OK"
+// @Failure 400 {string} string "Bad Request"
+// @Security ApiKeyAuth
+// @Router /users/{id}/status [patch]
+func (h *Handler) UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
+    id := chi.URLParam(r, "id")
+	var req StatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.UpdateStatus(r.Context(), id, req.IsActive); err != nil {
+        http.Error(w, "update failed", http.StatusInternalServerError)
+		return
+    }
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -198,12 +196,22 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 // @Router /users/{id} [delete]
 func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	_, err := h.db.Exec(r.Context(), `
-		UPDATE users SET deleted_at=NOW() WHERE id=$1
-	`, id)
-	if err != nil {
+	if err := h.svc.DeleteUser(r.Context(), id); err != nil {
 		http.Error(w, "delete failed", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func mapUserToResponse(u *User) UserResponse {
+	return UserResponse{
+		ID:         u.ID,
+		EmployeeID: u.EmployeeID,
+		Name:       u.Name,
+		Email:      u.Email,
+		Phone:      u.Phone,
+		RoleID:     u.RoleID,
+		RoleName:   u.RoleName,
+		IsActive:   u.IsActive,
+	}
 }

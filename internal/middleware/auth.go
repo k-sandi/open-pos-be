@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"open-pos-be/internal/auth"
+	"open-pos-be/internal/jwt"
 )
 
 type contextKey string
@@ -35,7 +35,7 @@ func Auth(next http.Handler) http.Handler {
 			return
 		}
 
-		claims, err := auth.ValidateToken(tokenStr)
+		claims, err := jwt.ValidateToken(tokenStr)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)

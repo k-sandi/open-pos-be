@@ -6,7 +6,6 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
     "basePath": "/api/v1",
     "paths": {
         "/auth/login": {
@@ -214,7 +213,6 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Updates the active status of a user",
                 "consumes": [
                     "application/json"
                 ],

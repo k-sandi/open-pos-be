@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"open-pos-be/internal/auth"
+	"open-pos-be/internal/jwt"
 	"open-pos-be/internal/middleware"
 )
 
@@ -51,7 +51,7 @@ func TestAuthMiddleware(t *testing.T) {
 	})
 
 	t.Run("expired token returns 401", func(t *testing.T) {
-		token, err := auth.GenerateToken("user123", "admin", -1*time.Minute)
+		token, err := jwt.GenerateToken("user123", "admin", -1*time.Minute)
 		if err != nil {
 			t.Fatalf("unexpected error generating token: %v", err)
 		}
@@ -76,7 +76,7 @@ func TestAuthMiddleware(t *testing.T) {
 	})
 
 	t.Run("valid token injects user id and role into context", func(t *testing.T) {
-		token, err := auth.GenerateToken("user_abc", "cashier", 15*time.Minute)
+		token, err := jwt.GenerateToken("user_abc", "cashier", 15*time.Minute)
 		if err != nil {
 			t.Fatalf("unexpected error generating token: %v", err)
 		}

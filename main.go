@@ -21,7 +21,6 @@ import (
 // @title Open POS API
 // @version 1.0
 // @description Backend API for the Open POS application.
-// @host localhost:8080
 // @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
@@ -56,6 +55,14 @@ func main() {
 	}
 	log.Println("Connected to PostgreSQL database successfully!")
 
+	// Initialize Layers
+	userRepo := users.NewRepository(dbPool)
+	userService := users.NewService(userRepo)
+	userHandler := users.NewHandler(userService)
+
+	authService := auth.NewService(userRepo)
+	authHandler := auth.NewHandler(authService)
+
 	r := chi.NewRouter()
 
 	// Global Middlewares
@@ -74,7 +81,7 @@ func main() {
 			httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
 		))
 		
-		r.Mount("/api/v1/auth", auth.NewHandler(dbPool).Routes())
+		r.Mount("/api/v1/auth", authHandler.Routes())
 	})
 
 	// Protected Routes (requires x-api-key or Bearer token)
@@ -82,7 +89,7 @@ func main() {
 		r.Use(customMiddleware.Auth)
 
 		// Mount Users API Routes
-		r.Mount("/api/v1/users", users.NewHandler(dbPool).Routes())
+		r.Mount("/api/v1/users", userHandler.Routes())
 	})
 
 	log.Printf("Starting server on port %s...", port)

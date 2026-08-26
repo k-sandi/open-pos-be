@@ -39,7 +39,6 @@ definitions:
       is_active:
         type: boolean
     type: object
-host: localhost:8080
 info:
   contact: {}
   description: Backend API for the Open POS application.
@@ -163,7 +162,6 @@ paths:
     patch:
       consumes:
       - application/json
-      description: Updates the active status of a user
       parameters:
       - description: User ID
         in: path

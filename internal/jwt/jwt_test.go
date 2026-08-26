@@ -1,14 +1,14 @@
-package auth_test
+package jwt_test
 
 import (
 	"testing"
 	"time"
 
-	"open-pos-be/internal/auth"
+	"open-pos-be/internal/jwt"
 )
 
 func TestGenerateToken(t *testing.T) {
-	token, err := auth.GenerateToken("user123", "admin", 15*time.Minute)
+	token, err := jwt.GenerateToken("user123", "admin", 15*time.Minute)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -19,12 +19,12 @@ func TestGenerateToken(t *testing.T) {
 
 func TestValidateToken(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
-		token, err := auth.GenerateToken("user123", "admin", 15*time.Minute)
+		token, err := jwt.GenerateToken("user123", "admin", 15*time.Minute)
 		if err != nil {
 			t.Fatalf("unexpected error generating token: %v", err)
 		}
 
-		claims, err := auth.ValidateToken(token)
+		claims, err := jwt.ValidateToken(token)
 		if err != nil {
 			t.Fatalf("expected token to be valid, got error: %v", err)
 		}
@@ -37,19 +37,19 @@ func TestValidateToken(t *testing.T) {
 	})
 
 	t.Run("expired token", func(t *testing.T) {
-		token, err := auth.GenerateToken("user123", "admin", -1*time.Minute)
+		token, err := jwt.GenerateToken("user123", "admin", -1*time.Minute)
 		if err != nil {
 			t.Fatalf("unexpected error generating token: %v", err)
 		}
 
-		claims, err := auth.ValidateToken(token)
+		claims, err := jwt.ValidateToken(token)
 		if err == nil {
 			t.Fatalf("expected error for expired token, got claims: %+v", claims)
 		}
 	})
 
 	t.Run("invalid token string", func(t *testing.T) {
-		_, err := auth.ValidateToken("invalid.token.string")
+		_, err := jwt.ValidateToken("invalid.token.string")
 		if err == nil {
 			t.Fatal("expected error for invalid token string, got nil")
 		}
