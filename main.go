@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -21,9 +21,13 @@ import (
 // @in header
 // @name x-api-key
 func main() {
+	// Initialize structured logger
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, relying on environment variables")
+		logger.Warn("No .env file found, relying on environment variables")
 	}
 
 	port := os.Getenv("PORT")
@@ -33,28 +37,37 @@ func main() {
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		log.Fatal("DATABASE_URL environment variable is not set")
+		logger.Error("DATABASE_URL environment variable is not set")
+		os.Exit(1)
 	}
 
 	// Initialize PostgreSQL connection pool
 	ctx := context.Background()
 	dbPool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
-		log.Fatalf("Unable to create connection pool: %v\n", err)
+		logger.Error("Unable to create connection pool", "error", err)
+		os.Exit(1)
 	}
 	defer dbPool.Close()
 
 	// Verify database connection
 	if err := dbPool.Ping(ctx); err != nil {
-		log.Fatalf("Unable to ping database: %v\n", err)
+		logger.Error("Unable to ping database", "error", err)
+		os.Exit(1)
 	}
-	log.Println("Connected to PostgreSQL database successfully!")
+	logger.Info("Connected to PostgreSQL database successfully!")
 
 	// Setup router with all routes and middlewares
-	r := router.Setup(dbPool)
+	r := router.Setup(dbPool, logger)
 
-	log.Printf("Starting server on port %s...", port)
+	logger.Info("Starting server...",
+		slog.String("port", port),
+		slog.String("swagger_ui", "http://localhost:"+port+"/swagger/index.html"),
+		slog.String("api_base", "http://localhost:"+port+"/api/v1"),
+	)
+	
 	if err := http.ListenAndServe(":"+port, r); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
+		logger.Error("Server failed to start", "error", err)
+		os.Exit(1)
 	}
 }

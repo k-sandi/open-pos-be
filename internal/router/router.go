@@ -8,13 +8,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
+	"log/slog"
+	
 	"open-pos-be/internal/auth"
 	customMiddleware "open-pos-be/internal/middleware"
 	"open-pos-be/internal/users"
 )
 
 // Setup configures and returns the main chi.Router with all mounted endpoints and middlewares.
-func Setup(dbPool *pgxpool.Pool) chi.Router {
+func Setup(dbPool *pgxpool.Pool, logger *slog.Logger) chi.Router {
 	// Initialize Layers
 	userRepo := users.NewRepository(dbPool)
 	userService := users.NewService(userRepo)
@@ -28,7 +30,7 @@ func Setup(dbPool *pgxpool.Pool) chi.Router {
 	// Global Middlewares
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	r.Use(customMiddleware.StructuredLogger(logger))
 	r.Use(middleware.Recoverer)
 
 	// Public Routes
