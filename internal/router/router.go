@@ -15,6 +15,7 @@ import (
 	customMiddleware "open-pos-be/internal/middleware"
 	"open-pos-be/internal/products"
 	"open-pos-be/internal/users"
+	"open-pos-be/internal/variants"
 )
 
 // Setup configures and returns the main chi.Router with all mounted endpoints and middlewares.
@@ -34,6 +35,14 @@ func Setup(dbPool *pgxpool.Pool, logger *slog.Logger) chi.Router {
 	productRepo := products.NewRepository(dbPool)
 	productService := products.NewService(productRepo)
 	productHandler := products.NewHandler(productService)
+
+	modifierGroupRepo := variants.NewModifierGroupRepository(dbPool)
+	modifierGroupService := variants.NewModifierGroupService(modifierGroupRepo)
+	modifierGroupHandler := variants.NewModifierGroupHandler(modifierGroupService)
+
+	modifierRepo := variants.NewModifierRepository(dbPool)
+	modifierService := variants.NewModifierService(modifierRepo)
+	modifierHandler := variants.NewModifierHandler(modifierService)
 
 	r := chi.NewRouter()
 
@@ -68,6 +77,10 @@ func Setup(dbPool *pgxpool.Pool, logger *slog.Logger) chi.Router {
 
 		// Mount Products API Routes
 		r.Mount("/api/v1/products", productHandler.Routes())
+
+		// Mount Variants API Routes
+		r.Mount("/api/v1/modifier-groups", modifierGroupHandler.Routes())
+		r.Mount("/api/v1/modifiers", modifierHandler.Routes())
 	})
 
 	return r

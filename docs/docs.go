@@ -280,6 +280,283 @@ const docTemplate = `{
                 }
             }
         },
+        "/modifier-groups": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modifier-groups"
+                ],
+                "summary": "Create Modifier Group",
+                "parameters": [
+                    {
+                        "description": "Modifier Group Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/variants.ModifierGroupDTO"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/modifier-groups/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modifier-groups"
+                ],
+                "summary": "Update Modifier Group",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modifier Group ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/variants.ModifierGroupDTO"
+                        }
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "modifier-groups"
+                ],
+                "summary": "Delete Modifier Group",
+                "responses": {}
+            }
+        },
+        "/modifier-groups/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modifier-groups"
+                ],
+                "summary": "Update Modifier Group Status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modifier Group ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status Update Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/variants.StatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/modifiers": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modifiers"
+                ],
+                "summary": "Create Modifier",
+                "parameters": [
+                    {
+                        "description": "Modifier Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/variants.ModifierDTO"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/modifiers/group/{groupID}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modifiers"
+                ],
+                "summary": "List Modifiers by Group",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modifier Group ID",
+                        "name": "groupID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/modifiers/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modifiers"
+                ],
+                "summary": "Update Modifier",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modifier ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Modifier Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/variants.ModifierDTO"
+                        }
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "modifiers"
+                ],
+                "summary": "Delete Modifier",
+                "responses": {}
+            }
+        },
+        "/modifiers/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modifiers"
+                ],
+                "summary": "Update Modifier Status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modifier ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status Update Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/variants.StatusRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/products": {
             "get": {
                 "security": [
@@ -449,6 +726,32 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/products/{product_id}/modifier-groups": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modifier-groups"
+                ],
+                "summary": "List Modifier Groups by Product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
         },
         "/users": {
@@ -721,6 +1024,48 @@ const docTemplate = `{
             }
         },
         "users.StatusRequest": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "variants.ModifierDTO": {
+            "type": "object",
+            "properties": {
+                "additional_price": {
+                    "type": "integer"
+                },
+                "modifier_group_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "variants.ModifierGroupDTO": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "max_choices": {
+                    "type": "integer"
+                },
+                "min_choices": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "variants.StatusRequest": {
             "type": "object",
             "properties": {
                 "is_active": {
