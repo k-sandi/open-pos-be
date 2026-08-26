@@ -3,7 +3,8 @@ package users
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // User represents the database entity
@@ -29,11 +30,17 @@ type Repository interface {
 	SoftDelete(ctx context.Context, id string) error
 }
 
-type repository struct {
-	db *pgxpool.Pool
+type DBTX interface {
+	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+	Query(context.Context, string, ...interface{}) (pgx.Rows, error)
+	QueryRow(context.Context, string, ...interface{}) pgx.Row
 }
 
-func NewRepository(db *pgxpool.Pool) Repository {
+type repository struct {
+	db DBTX
+}
+
+func NewRepository(db DBTX) Repository {
 	return &repository{db: db}
 }
 
