@@ -13,6 +13,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	_ "open-pos-be/docs"
 
+	"open-pos-be/internal/auth"
 	customMiddleware "open-pos-be/internal/middleware"
 	"open-pos-be/internal/users"
 )
@@ -72,6 +73,8 @@ func main() {
 		r.Get("/swagger/*", httpSwagger.Handler(
 			httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
 		))
+		
+		r.Mount("/api/v1/auth", auth.NewHandler(dbPool).Routes())
 	})
 
 	// Protected Routes (requires x-api-key or Bearer token)
@@ -79,7 +82,7 @@ func main() {
 		r.Use(customMiddleware.Auth)
 
 		// Mount Users API Routes
-		r.Mount("/api/v1/users", users.Routes())
+		r.Mount("/api/v1/users", users.NewHandler(dbPool).Routes())
 	})
 
 	log.Printf("Starting server on port %s...", port)

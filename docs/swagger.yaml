@@ -1,5 +1,34 @@
 basePath: /api/v1
 definitions:
+  auth.LoginRequest:
+    properties:
+      employee_id:
+        type: string
+      pin:
+        type: string
+    type: object
+  auth.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  users.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      employee_id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      pin:
+        type: string
+      role_id:
+        type: string
+    type: object
   users.StatusRequest:
     properties:
       is_active:
@@ -12,6 +41,86 @@ info:
   title: Open POS API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+      summary: Login User
+      tags:
+      - auth
+  /users:
+    get:
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List Users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.CreateUserRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create User
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete User
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.CreateUserRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update User
+      tags:
+      - users
   /users/{id}/status:
     patch:
       consumes:
@@ -43,6 +152,16 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update User Status
+      tags:
+      - users
+  /users/me:
+    get:
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get Current User Profile
       tags:
       - users
 securityDefinitions:

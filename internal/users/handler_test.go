@@ -10,11 +10,12 @@ import (
 )
 
 func TestUpdateStatusHandler(t *testing.T) {
+	h := users.NewHandler(nil)
 	req := httptest.NewRequest("PATCH", "/api/v1/users/123/status", strings.NewReader(`{"is_active": false}`))
 	req.Header.Set("Content-Type", "application/json")
 	rr := httptest.NewRecorder()
 
-	users.UpdateStatusHandler(rr, req)
+	h.UpdateStatusHandler(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d", rr.Code)
@@ -22,11 +23,12 @@ func TestUpdateStatusHandler(t *testing.T) {
 }
 
 func TestUpdateStatusHandler_InvalidBody(t *testing.T) {
+	h := users.NewHandler(nil)
 	req := httptest.NewRequest("PATCH", "/api/v1/users/123/status", strings.NewReader(`invalid json`))
 	req.Header.Set("Content-Type", "application/json")
 	rr := httptest.NewRecorder()
 
-	users.UpdateStatusHandler(rr, req)
+	h.UpdateStatusHandler(rr, req)
 
 	if rr.Code != http.StatusBadRequest {
 		t.Errorf("expected 400, got %d", rr.Code)
@@ -34,7 +36,8 @@ func TestUpdateStatusHandler_InvalidBody(t *testing.T) {
 }
 
 func TestRoutes_PatchUserStatus(t *testing.T) {
-	r := users.Routes()
+	h := users.NewHandler(nil)
+	r := h.Routes()
 
 	req := httptest.NewRequest("PATCH", "/123/status", strings.NewReader(`{"is_active": true}`))
 	req.Header.Set("Content-Type", "application/json")
