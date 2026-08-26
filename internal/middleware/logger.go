@@ -3,6 +3,7 @@ package middleware
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -18,6 +19,11 @@ func StructuredLogger(logger *slog.Logger) func(next http.Handler) http.Handler 
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 
 			next.ServeHTTP(ww, r)
+
+			// Skip logging for swagger endpoints to avoid noise
+			if strings.HasPrefix(r.URL.Path, "/swagger") {
+				return
+			}
 
 			logger.Info("HTTP Request",
 				slog.String("method", r.Method),
