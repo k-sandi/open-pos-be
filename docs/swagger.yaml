@@ -31,6 +31,96 @@ definitions:
       is_active:
         type: boolean
     type: object
+  orders.CreateOrderItemReq:
+    properties:
+      modifiers:
+        description: list of modifier IDs
+        items:
+          type: string
+        type: array
+      product_id:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  orders.CreateOrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/orders.CreateOrderItemReq'
+        type: array
+      payment_method:
+        type: string
+      tax_id:
+        type: string
+    type: object
+  orders.Order:
+    properties:
+      cashierID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/orders.OrderItem'
+        type: array
+      orderNumber:
+        type: string
+      paymentMethod:
+        type: string
+      status:
+        type: string
+      subtotal:
+        format: int64
+        type: integer
+      taxAmount:
+        format: int64
+        type: integer
+      taxID:
+        type: string
+      totalAmount:
+        format: int64
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  orders.OrderItem:
+    properties:
+      id:
+        type: string
+      modifiers:
+        items:
+          $ref: '#/definitions/orders.OrderItemModifier'
+        type: array
+      orderID:
+        type: string
+      productID:
+        type: string
+      quantity:
+        type: integer
+      subtotal:
+        format: int64
+        type: integer
+      unitPrice:
+        format: int64
+        type: integer
+    type: object
+  orders.OrderItemModifier:
+    properties:
+      id:
+        type: string
+      modifierID:
+        type: string
+      orderItemID:
+        type: string
+      price:
+        format: int64
+        type: integer
+    type: object
   products.CreateProductRequest:
     properties:
       category_id:
@@ -47,6 +137,20 @@ definitions:
         type: string
     type: object
   products.StatusRequest:
+    properties:
+      is_active:
+        type: boolean
+    type: object
+  taxes.CreateTaxRequest:
+    properties:
+      is_active:
+        type: boolean
+      name:
+        type: string
+      rate:
+        type: number
+    type: object
+  taxes.StatusRequest:
     properties:
       is_active:
         type: boolean
@@ -442,6 +546,47 @@ paths:
       summary: List Modifiers by Group
       tags:
       - modifiers
+  /orders:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new order, calculates tax and subtotal, and saves order
+        items and modifiers
+      parameters:
+      - description: Order Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/orders.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/orders.Order'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new order
+      tags:
+      - orders
   /products:
     get:
       produces:
@@ -564,6 +709,118 @@ paths:
       summary: List Modifier Groups by Product
       tags:
       - modifier-groups
+  /taxes:
+    get:
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List Taxes
+      tags:
+      - taxes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tax Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/taxes.CreateTaxRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create Tax
+      tags:
+      - taxes
+  /taxes/{id}:
+    delete:
+      parameters:
+      - description: Tax ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Tax
+      tags:
+      - taxes
+    get:
+      parameters:
+      - description: Tax ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get Tax
+      tags:
+      - taxes
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tax ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/taxes.CreateTaxRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update Tax
+      tags:
+      - taxes
+  /taxes/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tax ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/taxes.StatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update Tax Status
+      tags:
+      - taxes
   /users:
     get:
       produces:

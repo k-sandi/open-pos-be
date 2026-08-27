@@ -13,7 +13,9 @@ import (
 	"open-pos-be/internal/auth"
 	"open-pos-be/internal/categories"
 	customMiddleware "open-pos-be/internal/middleware"
+	"open-pos-be/internal/orders"
 	"open-pos-be/internal/products"
+	"open-pos-be/internal/taxes"
 	"open-pos-be/internal/users"
 	"open-pos-be/internal/variants"
 )
@@ -43,6 +45,14 @@ func Setup(dbPool *pgxpool.Pool, logger *slog.Logger) chi.Router {
 	modifierRepo := variants.NewModifierRepository(dbPool)
 	modifierService := variants.NewModifierService(modifierRepo)
 	modifierHandler := variants.NewModifierHandler(modifierService)
+
+	taxRepo := taxes.NewRepository(dbPool)
+	taxService := taxes.NewService(taxRepo)
+	taxHandler := taxes.NewHandler(taxService)
+
+	orderRepo := orders.NewRepository(dbPool)
+	orderService := orders.NewService(orderRepo)
+	orderHandler := orders.NewHandler(orderService)
 
 	r := chi.NewRouter()
 
@@ -81,6 +91,12 @@ func Setup(dbPool *pgxpool.Pool, logger *slog.Logger) chi.Router {
 		// Mount Variants API Routes
 		r.Mount("/api/v1/modifier-groups", modifierGroupHandler.Routes())
 		r.Mount("/api/v1/modifiers", modifierHandler.Routes())
+
+		// Mount Taxes API Routes
+		r.Mount("/api/v1/taxes", taxHandler.Routes())
+
+		// Mount Orders API Routes
+		r.Mount("/api/v1/orders", orderHandler.Routes())
 	})
 
 	return r

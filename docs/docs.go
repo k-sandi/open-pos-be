@@ -557,6 +557,67 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/orders": {
+            "post": {
+                "description": "Creates a new order, calculates tax and subtotal, and saves order items and modifiers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Create a new order",
+                "parameters": [
+                    {
+                        "description": "Order Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/orders.CreateOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/orders.Order"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/products": {
             "get": {
                 "security": [
@@ -752,6 +813,186 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {}
+            }
+        },
+        "/taxes": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "taxes"
+                ],
+                "summary": "List Taxes",
+                "responses": {}
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "taxes"
+                ],
+                "summary": "Create Tax",
+                "parameters": [
+                    {
+                        "description": "Tax Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/taxes.CreateTaxRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/taxes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "taxes"
+                ],
+                "summary": "Get Tax",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tax ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "taxes"
+                ],
+                "summary": "Update Tax",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tax ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/taxes.CreateTaxRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "taxes"
+                ],
+                "summary": "Delete Tax",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tax ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/taxes/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "taxes"
+                ],
+                "summary": "Update Tax Status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tax ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status Update Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/taxes.StatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         },
         "/users": {
@@ -969,6 +1210,140 @@ const docTemplate = `{
                 }
             }
         },
+        "orders.CreateOrderItemReq": {
+            "type": "object",
+            "properties": {
+                "modifiers": {
+                    "description": "list of modifier IDs",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                }
+            }
+        },
+        "orders.CreateOrderRequest": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/orders.CreateOrderItemReq"
+                    }
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "orders.Order": {
+            "type": "object",
+            "properties": {
+                "cashierID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/orders.OrderItem"
+                    }
+                },
+                "orderNumber": {
+                    "type": "string"
+                },
+                "paymentMethod": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subtotal": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "taxAmount": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "taxID": {
+                    "type": "string"
+                },
+                "totalAmount": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "orders.OrderItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "modifiers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/orders.OrderItemModifier"
+                    }
+                },
+                "orderID": {
+                    "type": "string"
+                },
+                "productID": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "subtotal": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "unitPrice": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "orders.OrderItemModifier": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "modifierID": {
+                    "type": "string"
+                },
+                "orderItemID": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
         "products.CreateProductRequest": {
             "type": "object",
             "properties": {
@@ -993,6 +1368,28 @@ const docTemplate = `{
             }
         },
         "products.StatusRequest": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "taxes.CreateTaxRequest": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                }
+            }
+        },
+        "taxes.StatusRequest": {
             "type": "object",
             "properties": {
                 "is_active": {
