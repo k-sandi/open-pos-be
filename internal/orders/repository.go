@@ -55,6 +55,8 @@ type Repository interface {
 	GetModifierPrice(ctx context.Context, modifierID string) (int64, error)
 	GetTaxRate(ctx context.Context, taxID string) (float64, error)
 	CreateOrderTx(ctx context.Context, order *Order) error
+	GetByID(ctx context.Context, id string) (*Order, error)
+	List(ctx context.Context) ([]*Order, error)
 }
 
 type repository struct {
@@ -129,4 +131,102 @@ func (r *repository) CreateOrderTx(ctx context.Context, order *Order) error {
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (r *repository) GetByID(ctx context.Context, id string) (*Order, error) {
+	var order Order
+	err := r.db.QueryRow(ctx, `
+		SELECT id, order_number, cashier_id, tax_id, subtotal, tax_amount, total_amount, payment_method, status, created_at, updated_at
+		FROM orders
+		WHERE id = $1 AND deleted_at IS NULL
+	`, id).Scan(&order.ID, &order.OrderNumber, &order.CashierID, &order.TaxID, &order.Subtotal, &order.TaxAmount, &order.TotalAmount, &order.PaymentMethod, &order.Status, &order.CreatedAt, &order.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.db.Query(ctx, `
+		SELECT id, order_id, product_id, quantity, unit_price, subtotal
+		FROM order_items
+		WHERE order_id = $1
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []OrderItem
+	for rows.Next() {
+		var item OrderItem
+		if err := rows.Scan(&item.ID, &item.OrderID, &item.ProductID, &item.Quantity, &item.UnitPrice, &item.Subtotal); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(items) > 0 {
+		var itemIDs []string
+		itemMap := make(map[string]*OrderItem)
+		for i := range items {
+			itemIDs = append(itemIDs, items[i].ID)
+			itemMap[items[i].ID] = &items[i]
+		}
+
+		modRows, err := r.db.Query(ctx, `
+			SELECT id, order_item_id, modifier_id, price
+			FROM order_item_modifiers
+			WHERE order_item_id = ANY($1)
+		`, itemIDs)
+		if err == nil {
+			defer modRows.Close()
+			for modRows.Next() {
+				var mod OrderItemModifier
+				if err := modRows.Scan(&mod.ID, &mod.OrderItemID, &mod.ModifierID, &mod.Price); err != nil {
+					return nil, err
+				}
+				if item, ok := itemMap[mod.OrderItemID]; ok {
+					item.Modifiers = append(item.Modifiers, mod)
+				}
+			}
+			if err := modRows.Err(); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+	order.Items = items
+
+	return &order, nil
+}
+
+func (r *repository) List(ctx context.Context) ([]*Order, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT id, order_number, cashier_id, tax_id, subtotal, tax_amount, total_amount, payment_method, status, created_at, updated_at
+		FROM orders
+		WHERE deleted_at IS NULL
+		ORDER BY created_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []*Order
+	for rows.Next() {
+		order := &Order{}
+		if err := rows.Scan(&order.ID, &order.OrderNumber, &order.CashierID, &order.TaxID, &order.Subtotal, &order.TaxAmount, &order.TotalAmount, &order.PaymentMethod, &order.Status, &order.CreatedAt, &order.UpdatedAt); err != nil {
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }

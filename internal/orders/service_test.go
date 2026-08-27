@@ -10,6 +10,8 @@ type mockRepo struct {
 	getModifierPrice func(ctx context.Context, modifierID string) (int64, error)
 	getTaxRate       func(ctx context.Context, taxID string) (float64, error)
 	createOrderTx    func(ctx context.Context, order *Order) error
+	getByID          func(ctx context.Context, id string) (*Order, error)
+	list             func(ctx context.Context) ([]*Order, error)
 }
 
 func (m *mockRepo) GetProductPrice(ctx context.Context, productID string) (int64, error) {
@@ -26,6 +28,20 @@ func (m *mockRepo) GetTaxRate(ctx context.Context, taxID string) (float64, error
 
 func (m *mockRepo) CreateOrderTx(ctx context.Context, order *Order) error {
 	return m.createOrderTx(ctx, order)
+}
+
+func (m *mockRepo) GetByID(ctx context.Context, id string) (*Order, error) {
+	if m.getByID != nil {
+		return m.getByID(ctx, id)
+	}
+	return nil, nil
+}
+
+func (m *mockRepo) List(ctx context.Context) ([]*Order, error) {
+	if m.list != nil {
+		return m.list(ctx)
+	}
+	return nil, nil
 }
 
 func TestService_CreateOrder(t *testing.T) {
@@ -99,5 +115,44 @@ func TestService_CreateOrder(t *testing.T) {
 
 	if order.ID != "order-123" {
 		t.Errorf("expected order ID 'order-123', got %v", order.ID)
+	}
+}
+
+func TestService_GetOrder(t *testing.T) {
+	repo := &mockRepo{
+		getByID: func(ctx context.Context, id string) (*Order, error) {
+			if id == "order-123" {
+				return &Order{ID: "order-123"}, nil
+			}
+			return nil, nil
+		},
+	}
+	svc := NewService(repo)
+
+	order, err := svc.GetOrder(context.Background(), "order-123")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if order == nil || order.ID != "order-123" {
+		t.Errorf("expected order ID 'order-123', got %v", order)
+	}
+}
+
+func TestService_ListOrders(t *testing.T) {
+	repo := &mockRepo{
+		list: func(ctx context.Context) ([]*Order, error) {
+			return []*Order{{ID: "order-123"}}, nil
+		},
+	}
+	svc := NewService(repo)
+
+	orders, err := svc.ListOrders(context.Background())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(orders) != 1 || orders[0].ID != "order-123" {
+		t.Errorf("expected 1 order with ID 'order-123', got %v", orders)
 	}
 }
