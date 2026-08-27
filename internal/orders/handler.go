@@ -21,6 +21,8 @@ func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Auth)
 	r.Post("/", h.CreateOrder)
+	r.Get("/", h.ListOrders)
+	r.Get("/{id}", h.GetOrder)
 	return r
 }
 
@@ -64,4 +66,55 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(order)
+}
+
+// GetOrder godoc
+// @Summary      Get order by ID
+// @Description  Get order details by ID
+// @Tags         orders
+// @Produce      json
+// @Param        id path string true "Order ID"
+// @Success      200  {object}  Order
+// @Failure      401  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /orders/{id} [get]
+func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	order, err := h.service.GetOrder(r.Context(), id)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "order not found"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(order)
+}
+
+// ListOrders godoc
+// @Summary      List all orders
+// @Description  List all orders
+// @Tags         orders
+// @Produce      json
+// @Success      200  {array}   Order
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /orders [get]
+func (h *Handler) ListOrders(w http.ResponseWriter, r *http.Request) {
+	orders, err := h.service.ListOrders(r.Context())
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	if orders == nil {
+		orders = []*Order{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(orders)
 }

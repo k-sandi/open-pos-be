@@ -22,6 +22,8 @@ type CreateOrderItemReq struct {
 
 type Service interface {
 	CreateOrder(ctx context.Context, cashierID string, req CreateOrderRequest) (*Order, error)
+	GetOrder(ctx context.Context, id string) (*Order, error)
+	ListOrders(ctx context.Context) ([]*Order, error)
 }
 
 type service struct {
@@ -110,4 +112,12 @@ func (s *service) CreateOrder(ctx context.Context, cashierID string, req CreateO
 	}
 
 	return order, nil
+}
+
+func (s *service) GetOrder(ctx context.Context, id string) (*Order, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
+func (s *service) ListOrders(ctx context.Context) ([]*Order, error) {
+	return s.repo.List(ctx)
 }
