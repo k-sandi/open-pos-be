@@ -12,6 +12,7 @@ import (
 	
 	"open-pos-be/internal/auth"
 	"open-pos-be/internal/categories"
+	"open-pos-be/internal/customers"
 	customMiddleware "open-pos-be/internal/middleware"
 	"open-pos-be/internal/orders"
 	"open-pos-be/internal/products"
@@ -53,6 +54,9 @@ func Setup(dbPool *pgxpool.Pool, logger *slog.Logger) chi.Router {
 	orderRepo := orders.NewRepository(dbPool)
 	orderService := orders.NewService(orderRepo)
 	orderHandler := orders.NewHandler(orderService)
+	customerRepo := customers.NewRepository(dbPool)
+	customerService := customers.NewService(customerRepo)
+	customerHandler := customers.NewHandler(customerService)
 
 	r := chi.NewRouter()
 
@@ -97,6 +101,8 @@ func Setup(dbPool *pgxpool.Pool, logger *slog.Logger) chi.Router {
 
 		// Mount Orders API Routes
 		r.Mount("/api/v1/orders", orderHandler.Routes())
+		// Mount Customers API Routes
+		r.Mount("/api/v1/customers", customerHandler.Routes())
 	})
 
 	return r

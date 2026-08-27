@@ -31,6 +31,33 @@ definitions:
       is_active:
         type: boolean
     type: object
+  customers.CreateCustomerRequest:
+    properties:
+      email:
+        type: string
+      loyalty_points:
+        type: integer
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  customers.UpdateCustomerRequest:
+    properties:
+      email:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  customers.UpdatePointsRequest:
+    properties:
+      points:
+        type: integer
+    type: object
   orders.CreateOrderItemReq:
     properties:
       modifiers:
@@ -374,6 +401,117 @@ paths:
       summary: Update Category Status
       tags:
       - categories
+  /customers:
+    get:
+      parameters:
+      - description: Search query by name or phone
+        in: query
+        name: query
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List Customers
+      tags:
+      - customers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Customer Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customers.CreateCustomerRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create Customer
+      tags:
+      - customers
+  /customers/{id}:
+    delete:
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Customer
+      tags:
+      - customers
+    get:
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get Customer
+      tags:
+      - customers
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customers.UpdateCustomerRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update Customer
+      tags:
+      - customers
+  /customers/{id}/points:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Points Delta
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customers.UpdatePointsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update Customer Points
+      tags:
+      - customers
   /modifier-groups:
     post:
       consumes:

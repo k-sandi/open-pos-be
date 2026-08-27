@@ -132,6 +132,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to seed taxes: %v", err)
 	}
+	
+	// 7. Seed Customers
+	log.Println("Seeding customers...")
+	_, err = dbPool.Exec(ctx, `
+		INSERT INTO customers (name, phone, email, loyalty_points, is_active)
+		VALUES ('John Doe', '08123456789', 'john.doe@example.com', 100, true)
+		ON CONFLICT DO NOTHING
+	`)
+	if err != nil {
+		log.Fatalf("Failed to seed customers: %v", err)
+	}
 
 	log.Println("Database seeded successfully! Default Admin - Employee ID: admin01, PIN: 123456")
 }
